@@ -62,7 +62,7 @@ function pushArray(ctx, a) {
     } else if (v === Object(v)) {
       pushObject(ctx, v);
     } else {
-      push(ctx, value(v));
+      push(ctx, value(v, stringify));
     }
     pushComma(ctx);
   });
@@ -81,7 +81,7 @@ function pushObject(ctx, o) {
     } else if (v === Object(v)) {
       pushObject(ctx, v);
     } else {
-      push(ctx, value(v));
+      push(ctx, value(v, stringify));
     }
     pushComma(ctx);
   });
@@ -98,7 +98,7 @@ function pushFn(ctx, n, a) {
     } else if (v === Object(v)) {
       pushObject(ctx, v);
     } else {
-      push(ctx, value(v));
+      push(ctx, value(v, stringify));
     }
     pushComma(ctx);
   })
@@ -114,7 +114,11 @@ function pushNode(ctx, n) {
   ]);
 }
 
-function value(s) {
+function pass(v) {
+  return v;
+}
+
+function value(s, encode) {
   var l = s.length;
   var b = [];
   var i = 0;
@@ -125,7 +129,7 @@ function value(s) {
 
   while (m = pat.exec(s)) {
     if (m.index) {
-      b.push(stringify(s.slice(i, m.index)));
+      b.push(encode(s.slice(i, m.index)));
     }
     n = 1;
     i = m.index + 2;
@@ -141,7 +145,7 @@ function value(s) {
   }
 
   if (i < l) {
-    b.push(stringify(s.slice(i)));
+    b.push(encode(s.slice(i)));
   }
 
   return b.join(' + ');
@@ -149,8 +153,8 @@ function value(s) {
 
 function parseStyle(s) {
   return s.split(';').reduce(function (a, s) {
-    var p = s.split(':', 2);
-    a[p[0].trim()] = value(p.slice(1).join(''));
+    var p = s.split(':');
+    a[p[0].trim()] = value(p.slice(1).join('').trim(), pass);
     return a;
   }, {});
 }
